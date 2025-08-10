@@ -30,10 +30,13 @@ fun Result<*>.toLoadState(): LoadState =
         LoadState.Error(exceptionOrNull()?.message ?: "Unknown error")
     }
 
+private const val PAGE_SIZE = 10
+
 class RepoOverviewViewModel(private val repository: GithubRepository) : ViewModel() {
 
     private val initialLoadState = MutableStateFlow<LoadState>(LoadState.Loading)
     private val loadingMoreState = MutableStateFlow<LoadState>(LoadState.NotLoading)
+    private val endReachedState = MutableStateFlow(false)
 
     val uiState = getUiFlow()
         .stateIn(
@@ -46,8 +49,9 @@ class RepoOverviewViewModel(private val repository: GithubRepository) : ViewMode
         combine(
             repository.repositories,
             initialLoadState,
-            loadingMoreState
-        ) { repos, loadState, loadMoreState ->
+            loadingMoreState,
+            endReachedState
+        ) { repos, loadState, loadMoreState, endReachedState ->
             if (loadState is LoadState.Error) {
                 UiState.Error(loadState.message)
             } else {
@@ -61,22 +65,35 @@ class RepoOverviewViewModel(private val repository: GithubRepository) : ViewMode
         }
 
     private fun refresh() = viewModelScope.launch {
+        endReachedState.value = false
         initialLoadState.value = LoadState.Loading
-        val result = repository.fetchRepositories(page = 1, perPage = 10)
+        val result = repository.fetchRepositories(page = 1, perPage = PAGE_SIZE)
         initialLoadState.value = result.toLoadState()
     }
 
     fun onRepositoryVisible(index: Int) {
         viewModelScope.launch {
             if (loadingMoreState.value is LoadState.Loading) return@launch
+            if (endReachedState.value) return@launch
 
             val repos = repository.repositories.first()
             if (repos.isEmpty()) return@launch
 
             if (index == repos.size - 1) {
-                val page = (repos.size / 10) + 1
+                val page = (repos.size / PAGE_SIZE) + 1
                 loadingMoreState.value = LoadState.Loading
-                val result = repository.fetchRepositories(page, perPage = 10)
+                val result = repository.fetchRepositories(page, perPage = PAGE_SIZE)
+
+                if (result.isFailure) {
+                    // Avoid loading loops
+                    endReachedState.value = true
+                }
+                result.getOrNull()?.let {
+                    // If the result is less than PAGE_SIZE, we assume we've reached the end
+                    if (it < PAGE_SIZE) {
+                        endReachedState.value = true
+                    }
+                }
                 loadingMoreState.value = result.toLoadState()
             }
         }

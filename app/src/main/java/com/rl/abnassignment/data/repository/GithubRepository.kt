@@ -17,7 +17,7 @@ class GithubRepository(
             list.map { it.toDomainModel() }
         }
 
-    suspend fun fetchRepositories(page: Int, perPage: Int): Result<Unit> = withContext(
+    suspend fun fetchRepositories(page: Int, perPage: Int): Result<Int> = withContext(
         Dispatchers.IO) {
         runCatching {
             val results = api.getRepositories(page = page, perPage = perPage)
@@ -27,6 +27,7 @@ class GithubRepository(
             if (results.isNotEmpty()) {
                 database.repoDao().insertAll(results.map { it.toDbModel() })
             }
+            results.size
         }.onFailure {
             it.message
         }
