@@ -11,6 +11,9 @@ interface RepoDao {
     @Query("SELECT * FROM Repository")
     fun getAll(): Flow<List<Repository>>
 
+    @Query("SELECT * FROM Repository WHERE id = :id")
+    fun getById(id: Int): Flow<Repository?>
+
     @Upsert
     suspend fun upsert(repo: Repository)
 

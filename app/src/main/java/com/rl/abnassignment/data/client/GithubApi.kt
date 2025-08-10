@@ -11,7 +11,7 @@ interface RepositoriesAPI {
         @Path("user") user: String = "abnamrocoesd",
         @Query("page") page: Int = 1,
         @Query("per_page") perPage: Int = 10,
-        @Query("sort") sort: String = "created",
+//        @Query("sort") sort: String = "created",
     ): List<RepositoryDTO>
 
 }

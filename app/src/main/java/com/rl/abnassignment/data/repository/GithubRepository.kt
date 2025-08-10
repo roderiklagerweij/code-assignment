@@ -4,7 +4,10 @@ import com.rl.abnassignment.data.client.RepositoriesAPI
 import com.rl.abnassignment.data.database.AppDatabase
 import com.rl.abnassignment.data.mapper.toDbModel
 import com.rl.abnassignment.data.mapper.toDomainModel
+import com.rl.abnassignment.domain.model.RepositoryModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
@@ -18,7 +21,8 @@ class GithubRepository(
         }
 
     suspend fun fetchRepositories(page: Int, perPage: Int): Result<Int> = withContext(
-        Dispatchers.IO) {
+        Dispatchers.IO
+    ) {
         runCatching {
             val results = api.getRepositories(page = page, perPage = perPage)
             if (page == 1) {
@@ -32,4 +36,7 @@ class GithubRepository(
             it.message
         }
     }
+
+    fun getRepositoryById(id: Int): Flow<RepositoryModel?> =
+        database.repoDao().getById(id).map { it?.toDomainModel() }.distinctUntilChanged()
 }

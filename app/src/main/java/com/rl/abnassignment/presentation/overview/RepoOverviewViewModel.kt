@@ -52,7 +52,7 @@ class RepoOverviewViewModel(private val repository: GithubRepository) : ViewMode
             loadingMoreState,
             endReachedState
         ) { repos, loadState, loadMoreState, endReachedState ->
-            if (loadState is LoadState.Error) {
+            if (loadState is LoadState.Error && repos.isEmpty()) {
                 UiState.Error(loadState.message)
             } else {
                 UiState.Content(
