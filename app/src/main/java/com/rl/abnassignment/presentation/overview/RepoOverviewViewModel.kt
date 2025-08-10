@@ -11,60 +11,76 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+sealed interface LoadState {
+    data object NotLoading : LoadState
+    data object Loading : LoadState
+    data class Error(val message: String) : LoadState
+}
+
 sealed class UiState<out T> {
     data object Loading : UiState<Nothing>()
     data class Content<T>(val content: T, val isLoadingMore: Boolean = false) : UiState<T>()
     data class Error(val message: String) : UiState<Nothing>()
 }
 
+fun Result<*>.toLoadState(): LoadState =
+    if (isSuccess) {
+        LoadState.NotLoading
+    } else {
+        LoadState.Error(exceptionOrNull()?.message ?: "Unknown error")
+    }
+
 class RepoOverviewViewModel(private val repository: GithubRepository) : ViewModel() {
 
-    private val isLoadingMore = MutableStateFlow(false)
+    private val initialLoadState = MutableStateFlow<LoadState>(LoadState.Loading)
+    private val loadingMoreState = MutableStateFlow<LoadState>(LoadState.NotLoading)
 
     val uiState = getUiFlow()
         .stateIn(
             scope = viewModelScope,
-            started = WhileSubscribed(5000),
+            started = WhileSubscribed(),
             initialValue = UiState.Loading
         )
 
     private fun getUiFlow() =
         combine(
             repository.repositories,
-            isLoadingMore
-        ) { repos, loadingMore ->
-            UiState.Content(content = repos, isLoadingMore = loadingMore)
+            initialLoadState,
+            loadingMoreState
+        ) { repos, loadState, loadMoreState ->
+            if (loadState is LoadState.Error) {
+                UiState.Error(loadState.message)
+            } else {
+                UiState.Content(
+                    content = repos,
+                    isLoadingMore = loadMoreState is LoadState.Loading
+                )
+            }
         }.onStart {
-            repository.fetchRepositories(page = 1, perPage = 10)
+            refresh()
         }
+
+    private fun refresh() = viewModelScope.launch {
+        initialLoadState.value = LoadState.Loading
+        val result = repository.fetchRepositories(page = 1, perPage = 10)
+        initialLoadState.value = result.toLoadState()
+    }
 
     fun onRepositoryVisible(index: Int) {
         viewModelScope.launch {
-            if (isLoadingMore.value) return@launch
+            if (loadingMoreState.value is LoadState.Loading) return@launch
 
             val repos = repository.repositories.first()
             if (repos.isEmpty()) return@launch
 
             if (index == repos.size - 1) {
                 val page = (repos.size / 10) + 1
-                isLoadingMore.value = true
-                repository.fetchRepositories(page, perPage = 10)
-                isLoadingMore.value = false
+                loadingMoreState.value = LoadState.Loading
+                val result = repository.fetchRepositories(page, perPage = 10)
+                loadingMoreState.value = result.toLoadState()
             }
         }
     }
 
-    fun onRefresh() {
-        viewModelScope.launch {
-            isLoadingMore.value = false
-            repository.fetchRepositories(page = 1, perPage = 10)
-        }
-    }
-
-    fun onRetry() {
-        viewModelScope.launch {
-            isLoadingMore.value = false
-            repository.fetchRepositories(page = 1, perPage = 10)
-        }
-    }
+    fun onRetry() = refresh()
 }

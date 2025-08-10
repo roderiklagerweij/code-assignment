@@ -17,7 +17,7 @@ fun RepoOverviewContent(
     modifier: Modifier = Modifier,
     uiState: UiState.Content<List<RepositoryModel>>,
     onRepositoryVisible: (Int) -> Unit,
-    onRepoClick: (RepositoryModel) -> Unit,
+    onRepoClick: (Int) -> Unit,
 ) {
     if (uiState.content.isEmpty()) {
         Text(
@@ -38,7 +38,7 @@ fun RepoOverviewContent(
                 text = repositories[index].name,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { onRepoClick(repositories[index]) }
+                    .clickable { onRepoClick(repositories[index].id) }
                     .padding(8.dp)
             )
         }
@@ -46,7 +46,7 @@ fun RepoOverviewContent(
         item {
             if (uiState.isLoadingMore) {
                 Text(
-                    text = "Load more...",
+                    text = "Loading more items...",
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(8.dp)

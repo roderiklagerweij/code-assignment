@@ -17,14 +17,18 @@ class GithubRepository(
             list.map { it.toDomainModel() }
         }
 
-    suspend fun fetchRepositories(page: Int, perPage: Int) = withContext(
+    suspend fun fetchRepositories(page: Int, perPage: Int): Result<Unit> = withContext(
         Dispatchers.IO) {
-        val results = api.getRepositories(page = page, perPage = perPage)
-        if (page == 1) {
-            database.repoDao().deleteAll()
-        }
-        if (results.isNotEmpty()) {
-            database.repoDao().insertAll(results.map { it.toDbModel() })
+        runCatching {
+            val results = api.getRepositories(page = page, perPage = perPage)
+            if (page == 1) {
+                database.repoDao().deleteAll()
+            }
+            if (results.isNotEmpty()) {
+                database.repoDao().insertAll(results.map { it.toDbModel() })
+            }
+        }.onFailure {
+            it.message
         }
     }
 }

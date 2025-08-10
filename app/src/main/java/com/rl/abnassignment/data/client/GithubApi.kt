@@ -10,7 +10,8 @@ interface RepositoriesAPI {
     suspend fun getRepositories(
         @Path("user") user: String = "abnamrocoesd",
         @Query("page") page: Int = 1,
-        @Query("per_page") perPage: Int = 10
+        @Query("per_page") perPage: Int = 10,
+        @Query("sort") sort: String = "created",
     ): List<RepositoryDTO>
 
 }

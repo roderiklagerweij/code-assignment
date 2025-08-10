@@ -15,7 +15,9 @@ import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RepoOverviewScreen(viewModel: RepoOverviewViewModel = koinViewModel()) {
+fun RepoOverviewScreen(
+    onRepoClick: (Int) -> Unit,
+    viewModel: RepoOverviewViewModel = koinViewModel()) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -33,7 +35,7 @@ fun RepoOverviewScreen(viewModel: RepoOverviewViewModel = koinViewModel()) {
                         .fillMaxSize()
                         .padding(innerPadding),
                     uiState = uiState,
-                    onRepoClick = {},
+                    onRepoClick = onRepoClick,
                     onRepositoryVisible = viewModel::onRepositoryVisible
                 )
             }
