@@ -4,9 +4,9 @@ import com.rl.abnassignment.data.client.RepositoriesAPI
 import com.rl.abnassignment.data.database.AppDatabase
 import com.rl.abnassignment.data.mapper.toDbModel
 import com.rl.abnassignment.data.mapper.toDomainModel
-import com.rl.abnassignment.domain.model.RepositoryModel
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 
 class GithubRepository(
     private val api: RepositoriesAPI,
@@ -17,12 +17,14 @@ class GithubRepository(
             list.map { it.toDomainModel() }
         }
 
-    suspend fun fetchRepositories(): Flow<List<RepositoryModel>> {
-        val results = api.getRepositories(page = 1)
+    suspend fun fetchRepositories(page: Int, perPage: Int) = withContext(
+        Dispatchers.IO) {
+        val results = api.getRepositories(page = page, perPage = perPage)
+        if (page == 1) {
+            database.repoDao().deleteAll()
+        }
         if (results.isNotEmpty()) {
             database.repoDao().insertAll(results.map { it.toDbModel() })
         }
-        return repositories
     }
-
 }

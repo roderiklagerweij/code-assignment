@@ -16,4 +16,7 @@ interface RepoDao {
 
     @Upsert
     suspend fun insertAll(repos: List<Repository>)
+
+    @Query("DELETE FROM Repository")
+    fun deleteAll()
 }
