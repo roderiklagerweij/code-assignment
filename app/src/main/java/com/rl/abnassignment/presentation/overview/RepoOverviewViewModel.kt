@@ -6,6 +6,7 @@ import com.rl.abnassignment.data.repository.GithubRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
@@ -39,11 +40,13 @@ class RepoOverviewViewModel(private val repository: GithubRepository) : ViewMode
     private val endReachedState = MutableStateFlow(false)
 
     val uiState = getUiFlow()
+        .distinctUntilChanged()
         .stateIn(
             scope = viewModelScope,
             started = WhileSubscribed(),
             initialValue = UiState.Loading
         )
+
 
     private fun getUiFlow() =
         combine(

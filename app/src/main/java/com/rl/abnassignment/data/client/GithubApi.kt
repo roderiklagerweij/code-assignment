@@ -5,7 +5,7 @@ import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
 
-interface RepositoriesAPI {
+interface GithubApi {
     @GET("users/{user}/repos")
     suspend fun getRepositories(
         @Path("user") user: String = "abnamrocoesd",

@@ -7,7 +7,7 @@ import com.rl.abnassignment.data.database.model.Repository
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface RepoDao {
+interface RepositoryDao {
     @Query("SELECT * FROM Repository")
     fun getAll(): Flow<List<Repository>>
 

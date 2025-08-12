@@ -2,7 +2,7 @@ package com.rl.abnassignment.data.di
 
 
 import androidx.room.Room
-import com.rl.abnassignment.data.client.RepositoriesAPI
+import com.rl.abnassignment.data.client.GithubApi
 import com.rl.abnassignment.data.database.AppDatabase
 import com.rl.abnassignment.data.repository.GithubRepository
 import okhttp3.OkHttpClient
@@ -31,7 +31,7 @@ val dataModule = module {
             .addConverterFactory(MoshiConverterFactory.create())
             .client(get())
             .build()
-            .create(RepositoriesAPI::class.java)
+            .create(GithubApi::class.java)
     }
 
     single {
