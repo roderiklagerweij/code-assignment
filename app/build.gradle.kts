@@ -64,6 +64,7 @@ dependencies {
     implementation(libs.bundles.retrofit)
     implementation(libs.bundles.room)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.coil.compose)
     ksp(libs.androidx.room.compiler)
     ksp(libs.moshi.codegen)
 

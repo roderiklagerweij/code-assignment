@@ -4,6 +4,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import app.cash.turbine.test
 import com.rl.abnassignment.data.client.GithubApi
+import com.rl.abnassignment.data.client.OwnerDTO
 import com.rl.abnassignment.data.client.RepositoryDTO
 import com.rl.abnassignment.data.database.AppDatabase
 import com.rl.abnassignment.data.mapper.toDbModel
@@ -72,7 +73,13 @@ class RepoOverviewViewModelTest : AutoCloseKoinTest() {
         coEvery { mockApi.getRepositories("abnamrocoesd", 1, 10) } returns listOf(
             RepositoryDTO(
                 id = 1,
-                name = "Test Repo"
+                name = "Test Repo",
+                full_name = "org/test-repo",
+                description = "Test description",
+                html_url = "https://github.com/org/test-repo",
+                visibility = "public",
+                private = false,
+                owner = OwnerDTO(avatar_url = "https://example.com/avatar.png")
             )
         )
 
@@ -93,10 +100,28 @@ class RepoOverviewViewModelTest : AutoCloseKoinTest() {
     fun `When last item on list is shown next page is fetched`() = runTest {
         // Set up mocks for pagination
         coEvery { mockApi.getRepositories("abnamrocoesd", 1, 10) } returns List(10) { i ->
-            RepositoryDTO(id = i + 1, name = "Test Repo ${i + 1}")
+            RepositoryDTO(
+                id = i + 1,
+                name = "Test Repo ${i + 1}",
+                full_name = "org/test-repo-${i + 1}",
+                description = "Test description ${i + 1}",
+                html_url = "https://github.com/org/test-repo-${i + 1}",
+                visibility = "public",
+                private = false,
+                owner = OwnerDTO(avatar_url = "https://example.com/avatar.png")
+            )
         }
         coEvery { mockApi.getRepositories("abnamrocoesd", 2, 10) } returns List(10) { i ->
-            RepositoryDTO(id = 10 + i + 1, name = "Test Repo ${10 + i + 1}")
+            RepositoryDTO(
+                id = 10 + i + 1,
+                name = "Test Repo ${10 + i + 1}",
+                full_name = "org/test-repo-${10 + i + 1}",
+                description = "Test description ${10 + i + 1}",
+                html_url = "https://github.com/org/test-repo-${10 + i + 1}",
+                visibility = "public",
+                private = false,
+                owner = OwnerDTO(avatar_url = "https://example.com/avatar.png")
+            )
         }
         val viewModel = RepoOverviewViewModel(githubRepository)
 
@@ -134,7 +159,16 @@ class RepoOverviewViewModelTest : AutoCloseKoinTest() {
         // Set up initial data in the database
         repositoryDao.insertAll(
             List(5) { i ->
-                RepositoryDTO(id = i + 1, name = "Cached Repo ${i + 1}").toDbModel()
+                RepositoryDTO(
+                    id = i + 1,
+                    name = "Cached Repo ${i + 1}",
+                    full_name = "org/cached-repo-${i + 1}",
+                    description = "Cached description ${i + 1}",
+                    html_url = "https://github.com/org/cached-repo-${i + 1}",
+                    visibility = "public",
+                    private = false,
+                    owner = OwnerDTO(avatar_url = "https://example.com/avatar.png")
+                ).toDbModel()
             }
         )
 

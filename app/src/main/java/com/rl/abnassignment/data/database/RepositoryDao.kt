@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface RepositoryDao {
-    @Query("SELECT * FROM Repository")
+    @Query("SELECT * FROM Repository ORDER BY full_name ASC")
     fun getAll(): Flow<List<Repository>>
 
     @Query("SELECT * FROM Repository WHERE id = :id")

@@ -6,10 +6,9 @@ import com.rl.abnassignment.data.mapper.toDbModel
 import com.rl.abnassignment.data.mapper.toDomainModel
 import com.rl.abnassignment.domain.model.RepositoryModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
@@ -21,8 +20,8 @@ class GithubRepository(
         get() = database.repositoryDao().getAll().map { list ->
             list.map { it.toDomainModel() }
         }
-            .filter { it.isNotEmpty() }
-            .distinctUntilChanged()
+//            .filter { it.isNotEmpty() }
+//            .distinctUntilChanged()
 
     suspend fun fetchRepositories(page: Int, perPage: Int): Result<Int> =
         withContext(Dispatchers.IO) {

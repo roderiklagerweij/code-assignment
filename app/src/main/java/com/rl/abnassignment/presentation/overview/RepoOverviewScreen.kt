@@ -22,7 +22,7 @@ fun RepoOverviewScreen(
         topBar = {
             TopAppBar(
                 {
-                    Text("Repository Overview")
+                    Text("Repositories")
                 },
             )
         }

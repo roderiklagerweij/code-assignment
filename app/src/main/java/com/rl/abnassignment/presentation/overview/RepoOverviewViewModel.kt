@@ -47,7 +47,6 @@ class RepoOverviewViewModel(private val repository: GithubRepository) : ViewMode
             initialValue = UiState.Loading
         )
 
-
     private fun getUiFlow() =
         combine(
             repository.repositories,
@@ -57,6 +56,8 @@ class RepoOverviewViewModel(private val repository: GithubRepository) : ViewMode
         ) { repos, loadState, loadMoreState, endReachedState ->
             if (loadState is LoadState.Error && repos.isEmpty()) {
                 UiState.Error(loadState.message)
+            } else if (repos.isEmpty()) {
+                UiState.Loading
             } else {
                 UiState.Content(
                     content = repos,
