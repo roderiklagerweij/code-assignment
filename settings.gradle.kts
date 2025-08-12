@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "ABN Assignment"
+rootProject.name = "Coding Assignment"
 include(":app")
  

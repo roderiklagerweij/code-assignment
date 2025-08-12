@@ -2,16 +2,16 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
 }
 
 android {
-    namespace = "com.rl.abnassignment"
+    namespace = "com.rl.codingassignment"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.rl.abnassignment"
+        applicationId = "com.rl.codingassignment"
         minSdk = 31
         targetSdk = 35
         versionCode = 1
@@ -29,19 +29,29 @@ android {
             )
         }
     }
+    
+    buildFeatures {
+        compose = true
+    }
+    
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    
     kotlinOptions {
         jvmTarget = "11"
     }
-    buildFeatures {
-        compose = true
-    }
+    
+//    @Suppress("UnstableApiUsage")
+//    testOptions {
+//        unitTests {
+//            isIncludeAndroidResources = true
+//        }
+//    }
 }
 
-configurations.implementation{
+configurations.implementation {
     exclude(group = "com.intellij", module = "annotations")
 }
 
@@ -50,37 +60,40 @@ ksp {
 }
 
 dependencies {
-
+    // Compose BOM
+    val composeBom = platform(libs.androidx.compose.bom)
+    implementation(composeBom)
+    androidTestImplementation(composeBom)
+    
+    // AndroidX Core
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
-
-    implementation(libs.bundles.koin)
-    implementation(libs.bundles.retrofit)
-    implementation(libs.bundles.room)
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.coil.compose)
-    ksp(libs.androidx.room.compiler)
+    
+    // Compose
+    implementation(libs.bundles.compose)
+    debugImplementation(libs.bundles.compose.debug)
+    
+    // Dependency Injection
+    implementation(libs.bundles.koin)
+    
+    // Database
+    implementation(libs.bundles.room)
+    ksp(libs.room.compiler)
+    
+    // Networking
+    implementation(libs.bundles.networking)
     ksp(libs.moshi.codegen)
-
-    testImplementation(libs.junit)
-    testImplementation(libs.kotlinx.coroutines.test)
+    
+    // Images
+    implementation(libs.coil.compose)
+    
+    // Testing
+    testImplementation(libs.bundles.testing)
     testImplementation(libs.koin.test)
     testImplementation(libs.koin.test.junit4)
-    testImplementation(libs.androidx.room.testing)
+    testImplementation(libs.room.testing)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.robolectric)
-    testImplementation(libs.mockk)
-    testImplementation(libs.turbine)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
 }
