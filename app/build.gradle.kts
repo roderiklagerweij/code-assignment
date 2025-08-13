@@ -42,13 +42,6 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
-    
-//    @Suppress("UnstableApiUsage")
-//    testOptions {
-//        unitTests {
-//            isIncludeAndroidResources = true
-//        }
-//    }
 }
 
 configurations.implementation {

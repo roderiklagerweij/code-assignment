@@ -24,7 +24,7 @@ For presentation, I just ViewModels, so MVVM-like. In the viewmodel, I observe m
 
 For the Composables, I took a state hoisting approach and pass the state down to the Composables (*Screen -> *Content). This helps with setting up Previews and makes reusability easier.
 
-## Offline first Approach
+## Offline First Approach
 
 To make this an offline-first app, I observe the local database and only fetch the repositories to update the database. This way, the app still shows data if the user is offline, if it has been fetched before.
 
@@ -47,8 +47,20 @@ I have included a few example tests for the RepoOverviewViewModel.
 
 The approach I took here is to essentially test throughout multiple layers, that is starting from the ViewModel all the way to the API where only the API responses are mocked.
 
-This is slightly different approach what you often see done in Android development, with a key benefit being here that this is allows you to afterwards refactor code more easily, as you can be sure that the entire functionality is still working, all the way through.
+Reason for this approach is that I have found it to be very effective in case you want to refactor code later on. 
 
-I included a few examples for how this could be done that touch the paging functionality.
+I have included a few example tests for this, for example a test where cached data is available, the API returns an error and it correctly falls back to the cached data.
 
+To run:
+```bash
+./gradlew app:testDebug
+```
+
+## Refresh on Internet Connection Restored
+
+Unfortunately I did not get around to this part. However, if I would have done this, I would have:
+* Created a NetworkConnectionMonitor that observes the network state
+* In the ViewModel, I would observe this state and trigger a refresh when the network becomes available again
+
+One challenge here would be to ensure that the if this happens mid-paging, the correct page is fetched.
 

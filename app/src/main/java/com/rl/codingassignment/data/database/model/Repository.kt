@@ -40,7 +40,7 @@ data class Repository(
             List(count) { index ->
                 createMock(
                     id = startId + index,
-                    isPrivate = index % 3 == 0 // Every third repo is private for variety
+                    isPrivate = index % 2 == 0
                 )
             }
         

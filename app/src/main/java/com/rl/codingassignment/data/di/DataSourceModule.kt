@@ -5,16 +5,18 @@ import androidx.room.Room
 import com.rl.codingassignment.data.api.GithubApi
 import com.rl.codingassignment.data.database.AppDatabase
 import com.rl.codingassignment.data.repository.GithubRepository
+import kotlinx.coroutines.Dispatchers
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.android.ext.koin.androidContext
-import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
 val dataModule = module {
-    singleOf(::GithubRepository)
+    single {
+        GithubRepository(get(), get(), Dispatchers.IO)
+    }
     single {
         HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
     }
@@ -40,4 +42,5 @@ val dataModule = module {
             AppDatabase::class.java, "database-name"
         ).build()
     }
+
 }

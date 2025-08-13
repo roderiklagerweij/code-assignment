@@ -1,4 +1,4 @@
-package com.rl.codingassignment.navigation
+package com.rl.codingassignment.presentation
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
