@@ -51,9 +51,8 @@ class RepoOverviewViewModel(private val repository: GithubRepository) : ViewMode
         combine(
             repository.repositories,
             initialLoadState,
-            loadingMoreState,
-            endReachedState
-        ) { repos, loadState, loadMoreState, endReachedState ->
+            loadingMoreState
+        ) { repos, loadState, loadMoreState ->
             if (loadState is LoadState.Error && repos.isEmpty()) {
                 UiState.Error(loadState.message)
             } else if (repos.isEmpty()) {

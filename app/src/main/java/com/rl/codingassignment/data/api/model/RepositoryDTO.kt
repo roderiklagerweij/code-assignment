@@ -1,6 +1,7 @@
 package com.rl.codingassignment.data.api.model
 
 import com.squareup.moshi.JsonClass
+import java.util.Locale
 
 @JsonClass(generateAdapter = true)
 data class RepositoryDTO(
@@ -16,8 +17,8 @@ data class RepositoryDTO(
     companion object {
         fun createMock(
             id: Int,
-            name: String = "Test Repo $id",
-            fullName: String = "org/test-repo-$id",
+            name: String = "Test Repo ${String.format(Locale.getDefault(), "%02d", id)}",
+            fullName: String = "org/test-repo-${String.format(Locale.getDefault(), "%02d", id)}",
             description: String? = "Test description $id",
             htmlUrl: String = "https://github.com/org/test-repo-$id",
             visibility: String = "public",

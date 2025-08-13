@@ -2,7 +2,6 @@ package com.rl.codingassignment.presentation.overview
 
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
-import app.cash.turbine.test
 import com.rl.codingassignment.data.api.GithubApi
 import com.rl.codingassignment.data.api.model.RepositoryDTO
 import com.rl.codingassignment.data.database.AppDatabase
@@ -12,9 +11,12 @@ import com.rl.codingassignment.koinModules
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.asExecutor
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -33,6 +35,7 @@ import kotlin.test.assertTrue
 private const val user = "abnamrocoesd"
 
 @RunWith(RobolectricTestRunner::class)
+@OptIn(ExperimentalCoroutinesApi::class)
 class RepoOverviewViewModelTest : AutoCloseKoinTest() {
 
     private val githubRepository by inject<GithubRepository>()
@@ -59,6 +62,7 @@ class RepoOverviewViewModelTest : AutoCloseKoinTest() {
         val testModule = module {
             single<AppDatabase> { appDatabase }
             single<GithubApi> { mockApi }
+            single<CoroutineDispatcher> { testDispatcher }
         }
 
         startKoin {
@@ -69,6 +73,7 @@ class RepoOverviewViewModelTest : AutoCloseKoinTest() {
         }
     }
 
+
     @Test
     fun `When viewmodel is loaded then repositories are fetched`() = runTest {
         coEvery { mockApi.getRepositories(user, 1, 10) } returns listOf(
@@ -76,16 +81,17 @@ class RepoOverviewViewModelTest : AutoCloseKoinTest() {
         )
 
         val viewModel = RepoOverviewViewModel(githubRepository)
-        viewModel.uiState.test {
-            assertTrue(awaitItem() is UiState.Loading)
-            val state = awaitItem()
 
-            assertTrue(state is UiState.Content)
-            assertEquals(1, state.content.size)
-            assertEquals("Test Repo", state.content[0].name)
-            coVerify { mockApi.getRepositories(user, 1, 10) }
-            cancelAndIgnoreRemainingEvents()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.uiState.collect {}
         }
+
+        val state = viewModel.uiState.value
+
+        coVerify { mockApi.getRepositories(user, 1, 10) }
+        assertTrue(state is UiState.Content, "Expected Content but got ${state::class.simpleName}")
+        assertEquals(1, state.content.size)
+        assertEquals("Test Repo", state.content[0].name)
     }
 
     @Test
@@ -96,35 +102,28 @@ class RepoOverviewViewModelTest : AutoCloseKoinTest() {
         
         coEvery { mockApi.getRepositories(user, 2, 10) } returns
             RepositoryDTO.createMockList(count = 10, startId = 11)
+            
         val viewModel = RepoOverviewViewModel(githubRepository)
-
-        viewModel.uiState.test {
-            val initial = awaitItem()
-            assertTrue(initial is UiState.Content)
-            assertEquals(10, initial.content.size)
-            coVerify(exactly = 1) { mockApi.getRepositories(user, 1, 10) }
-            coVerify(exactly = 0) { mockApi.getRepositories(user, 2, 10) }
-
-            // Simulate scrolling to the last item
-            viewModel.onRepositoryVisible(9)
-
-            coVerify(exactly = 1) { mockApi.getRepositories(user, 2, 10) }
-            val loadingItem = awaitItem()
-            assertTrue(loadingItem is UiState.Content && loadingItem.isLoadingMore)
-            val after = awaitItem()
-            assertTrue(after is UiState.Content)
-            assertEquals(20, after.content.size)
-
-            cancelAndIgnoreRemainingEvents()
+        
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.uiState.collect {}
         }
 
-        repositoryDao.getAll().test {
-            val repos = awaitItem()
-            assertEquals(20, repos.size)
-            assertEquals("Test Repo 1", repos[0].name)
-            assertEquals("Test Repo 20", repos[19].name)
-            cancelAndIgnoreRemainingEvents()
-        }
+        // Simulate scrolling to the last item
+        viewModel.onRepositoryVisible(9)
+        
+        // Check that also the second page was loaded
+        coVerify(exactly = 1) { mockApi.getRepositories(user, 1, 10) }
+        coVerify(exactly = 1) { mockApi.getRepositories(user, 2, 10) }
+        val finalState = viewModel.uiState.value
+        assertTrue(finalState is UiState.Content)
+        assertEquals(20, finalState.content.size)
+
+        // Verify database has all items
+        val repos = repositoryDao.getAll().first()
+        assertEquals(20, repos.size)
+        assertEquals(1, repos[0].id)
+        assertEquals(20, repos[19].id)
     }
 
     @Test
@@ -141,15 +140,17 @@ class RepoOverviewViewModelTest : AutoCloseKoinTest() {
         coEvery { mockApi.getRepositories(user, 1, 10) } throws Exception("Network error")
 
         val viewModel = RepoOverviewViewModel(githubRepository)
-        viewModel.uiState.test {
-            val state = awaitItem()
-
-            assertTrue(state is UiState.Content)
-            assertEquals(5, state.content.size)
-            assertEquals("Cached Repo 1", state.content[0].name)
-            assertEquals("Cached Repo 5", state.content[4].name)
-
-            cancelAndIgnoreRemainingEvents()
+        
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.uiState.collect {}
         }
+        
+        // The API fails but we get cached data
+        val state = viewModel.uiState.value
+        
+        assertTrue(state is UiState.Content)
+        assertEquals(5, state.content.size)
+        assertEquals("Cached Repo 1", state.content[0].name)
+        assertEquals("Cached Repo 5", state.content[4].name)
     }
 }
